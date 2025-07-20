@@ -13,14 +13,14 @@ interface ServerStatus {
 }
 
 const StatusCircle = ({ status }: { status: ServerStatus['status'] }) => {
-  const getStatusColor = (status: ServerStatus['status']) => {
+  const getStatusColor = (status: ServerStatus['status']): string => {
     switch (status) {
-      case 'UP': return 'bg-green-500'
-      case 'DOWN': return 'bg-red-500'
-      case 'OUT_OF_SERVICE': return 'bg-orange-500'
-      case 'UNKNOWN': return 'bg-gray-500'
-      case 'UNAVAILABLE': return 'bg-red-600'
-      default: return 'bg-gray-400'
+      case 'UP': return '#10b981' // green-500
+      case 'DOWN': return '#ef4444' // red-500
+      case 'OUT_OF_SERVICE': return '#f97316' // orange-500
+      case 'UNKNOWN': return '#6b7280' // gray-500
+      case 'UNAVAILABLE': return '#dc2626' // red-600
+      default: return '#9ca3af' // gray-400
     }
   }
 
@@ -36,9 +36,17 @@ const StatusCircle = ({ status }: { status: ServerStatus['status'] }) => {
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <div className={`w-4 h-4 rounded-full ${getStatusColor(status)} shadow-sm`}></div>
-      <span className="font-medium text-gray-800">{getStatusText(status)}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div 
+        style={{ 
+          width: '16px', 
+          height: '16px', 
+          borderRadius: '50%', 
+          backgroundColor: getStatusColor(status),
+          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+        }}
+      ></div>
+      <span style={{ fontWeight: '500', color: '#374151' }}>{getStatusText(status)}</span>
     </div>
   )
 }
@@ -145,6 +153,18 @@ export default function MonitoringPage() {
               
               <StatusCircle status={serverStatus.status} />
               
+              {/* Тест всех статусов */}
+              <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
+                <h4 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: '600' }}>Все возможные статусы:</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <StatusCircle status="UP" />
+                  <StatusCircle status="DOWN" />
+                  <StatusCircle status="OUT_OF_SERVICE" />
+                  <StatusCircle status="UNKNOWN" />
+                  <StatusCircle status="UNAVAILABLE" />
+                </div>
+              </div>
+              
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <p className="text-sm text-gray-600">
                   Последняя проверка: <span className="font-medium">{formatTime(serverStatus.lastChecked)}</span>
@@ -153,8 +173,21 @@ export default function MonitoringPage() {
                   <p className="text-xs text-gray-500 mt-1">
                     Время сервера (UTC): {(() => {
                       try {
-                        const date = new Date(serverStatus.timestamp)
-                        return isNaN(date.getTime()) ? 'Невалидная дата' : date.toISOString()
+                        // Парсим русский формат даты: "20.07.2025 15:06:14"
+                        const parseRussianDate = (dateStr: string) => {
+                          const match = dateStr.match(/(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}):(\d{2})/)
+                          if (match) {
+                            const [, day, month, year, hour, minute, second] = match
+                            return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second))
+                          }
+                          return new Date(dateStr) // fallback для других форматов
+                        }
+                        
+                        const date = parseRussianDate(serverStatus.timestamp)
+                        if (isNaN(date.getTime())) {
+                          return `Невалидная дата (${serverStatus.timestamp})`
+                        }
+                        return date.toISOString().replace('T', ' ').replace('.000Z', ' UTC')
                       } catch {
                         return 'Невалидная дата'
                       }
