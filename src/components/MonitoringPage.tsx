@@ -57,6 +57,7 @@ export default function MonitoringPage() {
     lastChecked: new Date()
   })
   const [isChecking, setIsChecking] = useState(false)
+  const [currentServerTime, setCurrentServerTime] = useState<Date | null>(null)
 
   const checkServerHealth = async () => {
     setIsChecking(true)
@@ -86,6 +87,23 @@ export default function MonitoringPage() {
           timestamp: data.timestamp,
           lastChecked: new Date()
         })
+        
+        // Синхронизируем время сервера
+        if (data.timestamp) {
+          const parseRussianDate = (dateStr: string) => {
+            const match = dateStr.match(/(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}):(\d{2})/)
+            if (match) {
+              const [, day, month, year, hour, minute, second] = match
+              return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second))
+            }
+            return new Date(dateStr)
+          }
+          
+          const serverDate = parseRussianDate(data.timestamp)
+          if (!isNaN(serverDate.getTime())) {
+            setCurrentServerTime(serverDate)
+          }
+        }
       } else {
         setServerStatus({
           status: 'DOWN',
@@ -112,6 +130,22 @@ export default function MonitoringPage() {
     
     return () => clearInterval(interval)
   }, [])
+
+  // Обновляем время сервера каждую секунду
+  useEffect(() => {
+    if (!currentServerTime) return
+
+    const clockInterval = setInterval(() => {
+      setCurrentServerTime(prevTime => {
+        if (!prevTime) return null
+        const newTime = new Date(prevTime)
+        newTime.setSeconds(newTime.getSeconds() + 1)
+        return newTime
+      })
+    }, 1000)
+
+    return () => clearInterval(clockInterval)
+  }, [currentServerTime])
 
   const formatTime = (date: Date) => {
     try {
@@ -169,27 +203,20 @@ export default function MonitoringPage() {
                 <p className="text-sm text-gray-600">
                   Последняя проверка: <span className="font-medium">{formatTime(serverStatus.lastChecked)}</span>
                 </p>
-                {serverStatus.timestamp && (
+                {currentServerTime && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Время сервера (UTC): {(() => {
+                    Время сервера: {(() => {
                       try {
-                        // Парсим русский формат даты: "20.07.2025 15:06:14"
-                        const parseRussianDate = (dateStr: string) => {
-                          const match = dateStr.match(/(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}):(\d{2})/)
-                          if (match) {
-                            const [, day, month, year, hour, minute, second] = match
-                            return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second))
-                          }
-                          return new Date(dateStr) // fallback для других форматов
-                        }
-                        
-                        const date = parseRussianDate(serverStatus.timestamp)
-                        if (isNaN(date.getTime())) {
-                          return `Невалидная дата (${serverStatus.timestamp})`
-                        }
-                        return date.toISOString().replace('T', ' ').replace('.000Z', ' UTC')
+                        return currentServerTime.toLocaleString('ru-RU', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit'
+                        })
                       } catch {
-                        return 'Невалидная дата'
+                        return 'Ошибка форматирования времени'
                       }
                     })()}
                   </p>
