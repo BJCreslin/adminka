@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import './App.css'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -22,9 +22,24 @@ const loginSchema = z.object({
 
 // Компонент для проверки авторизации
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('jwt')
+  const [isChecking, setIsChecking] = React.useState(true)
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false)
   
-  if (!token) {
+  React.useEffect(() => {
+    const token = localStorage.getItem('jwt')
+    setIsAuthenticated(!!token)
+    setIsChecking(false)
+  }, [])
+  
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    )
+  }
+  
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
   
@@ -72,6 +87,7 @@ function App() {
 }
 
 function LoginPage() {
+  const navigate = useNavigate()
   const {
     register,
     handleSubmit,
@@ -101,7 +117,7 @@ function LoginPage() {
       
       // Перенаправляем на главную страницу через 1.5 секунды
       setTimeout(() => {
-        window.location.href = '/'
+        navigate('/')
       }, 1500)
       
     } catch {

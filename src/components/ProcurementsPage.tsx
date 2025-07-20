@@ -1,4 +1,4 @@
-import React from 'react'
+// import React from 'react'
 
 const ProcurementsIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className="text-green-500">

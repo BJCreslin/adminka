@@ -1,4 +1,4 @@
-import React from 'react'
+// import React from 'react'
 
 // SVG иконки как React компоненты
 const Icons = {
