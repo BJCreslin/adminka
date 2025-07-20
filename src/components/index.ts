@@ -1,0 +1,6 @@
+export { default as Layout } from './Layout'
+export { default as Navigation } from './Navigation'
+export { default as MainPage } from './MainPage'
+export { default as UsersPage } from './UsersPage'
+export { default as ProcurementsPage } from './ProcurementsPage'
+export { default as MonitoringPage } from './MonitoringPage' 

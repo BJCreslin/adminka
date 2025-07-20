@@ -6,6 +6,11 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { QRCodeSVG } from 'qrcode.react'
 import { TELEGRAM_BOT_URL } from './constants'
+import Layout from './components/Layout'
+import MainPage from './components/MainPage'
+import UsersPage from './components/UsersPage'
+import ProcurementsPage from './components/ProcurementsPage'
+import MonitoringPage from './components/MonitoringPage'
 
 interface LoginFormValues {
   code: string
@@ -15,11 +20,53 @@ const loginSchema = z.object({
   code: z.string().min(4, 'Введите код из Telegram (не менее 4 символов)')
 })
 
+// Компонент для проверки авторизации
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem('jwt')
+  
+  if (!token) {
+    return <Navigate to="/login" replace />
+  }
+  
+  return <Layout>{children}</Layout>
+}
+
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route 
+        path="/" 
+        element={
+          <ProtectedRoute>
+            <MainPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/users" 
+        element={
+          <ProtectedRoute>
+            <UsersPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/procurements" 
+        element={
+          <ProtectedRoute>
+            <ProcurementsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/monitoring" 
+        element={
+          <ProtectedRoute>
+            <MonitoringPage />
+          </ProtectedRoute>
+        } 
+      />
     </Routes>
   )
 }
@@ -34,6 +81,7 @@ function LoginPage() {
     resolver: zodResolver(loginSchema)
   })
   const [message, setMessage] = React.useState<string | null>(null)
+  const [isSuccess, setIsSuccess] = React.useState(false)
 
   async function onSubmit() {
     clearErrors()
@@ -48,9 +96,14 @@ function LoginPage() {
       const fakeToken = `fake-jwt-token-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       
       localStorage.setItem('jwt', fakeToken)
-      setMessage('Успешный вход! (Временный режим - любой код принят)')
+      setMessage('Успешный вход! Переходим в панель управления...')
+      setIsSuccess(true)
       
-      // Здесь можно сделать редирект или обновить состояние приложения
+      // Перенаправляем на главную страницу через 1.5 секунды
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 1500)
+      
     } catch {
       setMessage('Не удалось сохранить токен. Проверьте настройки браузера.')
     }
@@ -127,7 +180,9 @@ function LoginPage() {
           </button>
         </form>
         {message && (
-          <div className="text-center text-sm mt-2 text-red-600">{message}</div>
+          <div className={`text-center text-sm mt-2 ${isSuccess ? 'text-green-600' : 'text-red-600'}`}>
+            {message}
+          </div>
         )}
       </div>
     </div>
