@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { API_BASE_URL } from '../constants'
 
 const MonitoringIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-500">
@@ -69,7 +70,7 @@ export default function MonitoringPage() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 секунд таймаут
       
-      const response = await fetch('https://naidizakupku.ru/api/health', {
+      const response = await fetch(`${API_BASE_URL}/health`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
