@@ -92,7 +92,7 @@ export default function Navigation({ onLogout }: NavigationProps) {
                 location.pathname === item.path
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } ${item.key === 'logout' ? 'text-red-500 hover:text-red-700' : ''}`}
+              } ${item.key === 'logout' ? 'text-red-500 hover:text-red-700 ml-auto' : ''}`}
             >
               <span className={item.key === 'logout' ? 'text-red-500' : ''}>
                 {item.icon}
