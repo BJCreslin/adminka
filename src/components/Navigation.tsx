@@ -86,13 +86,15 @@ export default function Navigation({ onLogout }: NavigationProps) {
             <button
               key={item.key}
               onClick={() => handleItemClick(item)}
+              style={{
+                ...(item.key !== 'logout' ? { marginRight: '12px' } : { marginRight: '12px' }),
+                ...(index === 0 ? { marginLeft: '12px' } : {})
+              }}
               className={`flex items-center space-x-2 py-4 text-sm font-medium border-b-2 transition-colors ${
-                index < navigationItems.length - 1 ? 'mr-5' : ''
-              } ${
                 location.pathname === item.path
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } ${item.key === 'logout' ? 'text-red-500 hover:text-red-700 ml-auto pr-4' : ''} ${
+              } ${item.key === 'logout' ? 'text-red-500 hover:text-red-700 ml-auto pr-4' : 'mr-16 px-4'} ${
                 index === 0 ? 'pl-4' : ''
               }`}
             >
