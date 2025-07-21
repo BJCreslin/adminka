@@ -80,8 +80,8 @@ export default function Navigation({ onLogout }: NavigationProps) {
 
   return (
     <nav className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center min-h-[60px]">
           {navigationItems.map((item, index) => (
             <button
               key={item.key}
@@ -92,7 +92,9 @@ export default function Navigation({ onLogout }: NavigationProps) {
                 location.pathname === item.path
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } ${item.key === 'logout' ? 'text-red-500 hover:text-red-700 ml-auto' : ''}`}
+              } ${item.key === 'logout' ? 'text-red-500 hover:text-red-700 ml-auto pr-4' : ''} ${
+                index === 0 ? 'pl-4' : ''
+              }`}
             >
               <span className={item.key === 'logout' ? 'text-red-500' : ''}>
                 {item.icon}
