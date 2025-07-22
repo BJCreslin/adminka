@@ -38,13 +38,26 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
     throw new AuthError('Ошибка сервера. Попробуйте позже.', response.status)
   }
   
-  const result = await response.json()
+  // Сервер может возвращать токен как строку или как JSON объект
+  const contentType = response.headers.get('content-type')
+  let token: string
   
-  if (!result?.token) {
-    throw new AuthError('Некорректный ответ сервера. Попробуйте позже.')
+  if (contentType && contentType.includes('application/json')) {
+    // Если JSON, ищем поле token
+    const result = await response.json()
+    if (!result?.token) {
+      throw new AuthError('Некорректный ответ сервера. Попробуйте позже.')
+    }
+    token = result.token
+  } else {
+    // Если простая строка, используем её как токен
+    token = await response.text()
+    if (!token || token.length < 10) {
+      throw new AuthError('Некорректный токен от сервера. Попробуйте позже.')
+    }
   }
   
-  return { token: result.token }
+  return { token }
 }
 
 export function saveAuthToken(token: string): void {

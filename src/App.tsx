@@ -28,6 +28,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   
   React.useEffect(() => {
     const token = getAuthToken()
+    console.log('ProtectedRoute: проверяем токен', token ? 'найден' : 'не найден')
     setIsAuthenticated(!!token)
     setIsChecking(false)
   }, [])
@@ -41,6 +42,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
   
   if (!isAuthenticated) {
+    console.log('ProtectedRoute: пользователь не аутентифицирован, редирект на /login')
     return <Navigate to="/login" replace />
   }
   
@@ -88,6 +90,7 @@ function App() {
 }
 
 function LoginPage() {
+  console.log('LoginPage загружается')
   const navigate = useNavigate()
   const {
     register,
@@ -101,21 +104,28 @@ function LoginPage() {
   const [isSuccess, setIsSuccess] = React.useState(false)
 
   async function onSubmit(data: LoginFormValues) {
+    console.log('onSubmit вызван с данными:', data)
     clearErrors()
     setMessage(null)
     
     try {
+      console.log('Отправляем запрос с кодом:', parseInt(data.code, 10))
       const response = await login({ numberCode: parseInt(data.code, 10) })
+      console.log('Получили ответ:', response)
+      console.log('Получили токен:', response.token)
       saveAuthToken(response.token)
+      console.log('Токен сохранен, проверяем:', getAuthToken())
       
       setMessage('Успешный вход! Переходим в панель управления...')
       setIsSuccess(true)
       
-      // Перенаправляем на главную страницу через 1.5 секунды
+      // Перенаправляем через navigate без перезагрузки
       setTimeout(() => {
-        navigate('/')
-      }, 1500)
+        console.log('Перенаправляем на главную страницу')
+        navigate('/', { replace: true })
+      }, 1000)
     } catch (error) {
+      console.log('Ошибка в onSubmit:', error)
       if (error instanceof AuthError) {
         setMessage(error.message)
       } else {
