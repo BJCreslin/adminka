@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { QRCodeSVG } from 'qrcode.react'
 import { TELEGRAM_BOT_URL } from './constants'
+import { login, saveAuthToken, getAuthToken, AuthError } from './services/auth'
 import Layout from './components/Layout'
 import MainPage from './components/MainPage'
 import UsersPage from './components/UsersPage'
@@ -26,7 +27,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false)
   
   React.useEffect(() => {
-    const token = localStorage.getItem('jwt')
+    const token = getAuthToken()
     setIsAuthenticated(!!token)
     setIsChecking(false)
   }, [])
@@ -99,19 +100,14 @@ function LoginPage() {
   const [message, setMessage] = React.useState<string | null>(null)
   const [isSuccess, setIsSuccess] = React.useState(false)
 
-  async function onSubmit() {
+  async function onSubmit(data: LoginFormValues) {
     clearErrors()
     setMessage(null)
     
-    // ВРЕМЕННО: Принимаем любой код для входа
     try {
-      // Имитируем задержку сети
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await login({ numberCode: parseInt(data.code, 10) })
+      saveAuthToken(response.token)
       
-      // Генерируем фиктивный токен
-      const fakeToken = `fake-jwt-token-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      
-      localStorage.setItem('jwt', fakeToken)
       setMessage('Успешный вход! Переходим в панель управления...')
       setIsSuccess(true)
       
@@ -119,45 +115,13 @@ function LoginPage() {
       setTimeout(() => {
         navigate('/')
       }, 1500)
-      
-    } catch {
-      setMessage('Не удалось сохранить токен. Проверьте настройки браузера.')
-    }
-    
-    /* ЗАКОММЕНТИРОВАННЫЙ СТАРЫЙ КОД API:
-    let response: Response
-    try {
-      response = await fetch(`${API_BASE_URL}${LOGIN_ENDPOINT}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: data.code })
-      })
-    } catch {
-      setMessage('Ошибка сети. Попробуйте позже.')
-      return
-    }
-    if (!response.ok) {
-      if (response.status === 401) {
-        setError('code', { message: 'Неверный код. Попробуйте снова.' })
-        return
+    } catch (error) {
+      if (error instanceof AuthError) {
+        setMessage(error.message)
+      } else {
+        setMessage('Неожиданная ошибка. Попробуйте позже.')
       }
-      setMessage('Ошибка сервера. Попробуйте позже.')
-      return
     }
-    const result = await response.json()
-    if (!result?.token) {
-      setMessage('Некорректный ответ сервера. Попробуйте позже.')
-      return
-    }
-    try {
-      localStorage.setItem('jwt', result.token)
-    } catch {
-      setMessage('Не удалось сохранить токен. Проверьте настройки браузера.')
-      return
-    }
-    setMessage('Успешный вход!')
-    // Здесь можно сделать редирект или обновить состояние приложения
-    */
   }
 
   return (
